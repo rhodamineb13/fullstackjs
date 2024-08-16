@@ -1,0 +1,53 @@
+version: '3.8'
+
+# Services
+services:
+  # Server service
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: backend
+    ports:
+      - "5000:5000"
+    env_file: ./.env
+    environment:
+      - DB_HOST=localhost
+      - DB_USER=$POSTGRES_USER
+      - DB_PASSWORD=$POSTGRES_PASSWORD
+      - DB_NAME=$POSTGRES_DATABASE
+      - DB_PORT=$POSTGRES_DOCKER_PORT
+    depends_on:
+      - POSTGRES
+
+  # Client service
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+
+    container_name: frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - server
+
+  # Database service
+  postgres:
+    image: postgres:latest
+    container_name: postgres
+    restart: always
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
+    ports:
+      - "5432:5432"
+    networks:
+      - api
+    volumes:
+      - postgres_database:/var/lib/postgresql/data
+
+# Volumes define
+volumes: 
+  mydata:
